@@ -77,11 +77,11 @@ struct SearchModule {
     struct AdNotFoundError: Error {}
     struct InvalidFiltersError: Error {}
 
-    func searchAdByIdUseCase(adId: String) -> Result<String, ErrorTuple3<AdNotFoundError, SessionError.InvalidTokenError, APIModule.Errors>> {
+    func searchAdByIdUseCase(adId: String) -> Result<String, ComposedError3<AdNotFoundError, SessionError.InvalidTokenError, APIModule.Errors>> {
         return .success("Example Ad")
     }
 
-    func searchAllAdsUseCase(filters: String) -> Result<[String], ErrorTuple3<InvalidFiltersError, SessionError.InvalidTokenError, APIModule.Errors>> {
+    func searchAllAdsUseCase(filters: String) -> Result<[String], ComposedError3<InvalidFiltersError, SessionError.InvalidTokenError, APIModule.Errors>> {
         return .success(["Example Ad", "Example Ad", "Example Ad"])
     }
 }
