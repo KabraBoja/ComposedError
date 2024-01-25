@@ -1,5 +1,5 @@
 import XCTest
-@testable import ComposedError
+import ComposedError
 
 class ComposedErrorTests: XCTestCase {
 
@@ -11,32 +11,30 @@ class ComposedErrorTests: XCTestCase {
         case .success(_):
             break
         case .failure(let error):
-            error.switchError { (error: SearchModule.AdNotFoundError) in
-
-            } block2: { (error: SessionError.InvalidTokenError) in
-
-            } block3: { (error: APIModule.Errors) in
-
+            switch error {
+            case .e1(let adNotFoundError):
+                print(adNotFoundError)
+            case .e2(let sessionErrorInvalidTokenError):
+                print(sessionErrorInvalidTokenError)
+            case .e3(let APIError):
+                print(APIError)
             }
         }
     }
 
+    typealias TestsErrorType = ComposedError3<APIModule.Errors, DatabaseModule.Errors, SearchModule.AdNotFoundError>
 
-
-
-
-    typealias TestsErrorType = ErrorTuple3<APIModule.Errors, DatabaseModule.Errors, SearchModule.AdNotFoundError>
-
-    //typealias FooErrorType = ErrorTuple5<APIModule.Errors, DatabaseModule.Errors, SearchModule.Errors, CommonModule.UnknownError, CommonModule.MemoryWarningError>
-    private var mockError: TestsErrorType = ErrorTuple.make(APIModule.Errors.networkError)
+    private var mockError: TestsErrorType = ComposedError.make(APIModule.Errors.networkError)
 
     func testErrorTuple() throws {
 
-        mockError = ErrorTuple.make(DatabaseModule.Errors.incorrectQuery)
+        mockError = .error(DatabaseModule.Errors.incorrectQuery)
 
-        let errorTuple = mockedCall()
-        errorTuple.switchError { (error: APIModule.Errors) in
-            switch error {
+        let composedError = mockedCall()
+
+        switch composedError {
+        case .e1(let APIModuleError):
+            switch APIModuleError {
             case .networkError:
                 XCTFail("Incorrect Error")
             case .internalServerError:
@@ -44,25 +42,25 @@ class ComposedErrorTests: XCTestCase {
             case .invalidJSON:
                 XCTFail("Incorrect Error")
             }
-        } block2: { (error: DatabaseModule.Errors) in
-            switch error {
+        case .e2(let databaseModuleError):
+            switch databaseModuleError {
             case .incorrectQuery:
                 break
             case .databaseNotCreated:
                 XCTFail("Incorrect Error")
             }
-        } block3: { (error: SearchModule.AdNotFoundError) in
+        case .e3(let adNotFoundError):
+            print(adNotFoundError)
             XCTFail("Incorrect Error")
         }
-
-        XCTAssertTrue(errorTuple.isError(DatabaseModule.Errors.incorrectQuery))
     }
 
     func testErrorTupleRandomly() throws {
 
-        let errorTuple = randomCall()
-        errorTuple.switchError { (error: APIModule.Errors) in
-            switch error {
+        let composedError = randomMockedCall()
+        switch composedError {
+        case .e1(let aPIModuleError):
+            switch aPIModuleError {
             case .networkError:
                 break
             case .internalServerError:
@@ -70,15 +68,15 @@ class ComposedErrorTests: XCTestCase {
             case .invalidJSON:
                 XCTFail("Incorrect Error")
             }
-        } block2: { (error: DatabaseModule.Errors) in
-            switch error {
+        case .e2(let databaseModuleError):
+            switch databaseModuleError {
             case .incorrectQuery:
                 XCTFail("Incorrect Error")
             case .databaseNotCreated:
                 break
             }
-        } block3: { (error: SearchModule.AdNotFoundError) in
-
+        case .e3(let adNotFoundError):
+            print(adNotFoundError)
         }
     }
 
@@ -88,19 +86,19 @@ class ComposedErrorTests: XCTestCase {
         return mockError
     }
 
-    func randomCall() -> TestsErrorType {
+    func randomMockedCall() -> TestsErrorType {
         let idx = Int.random(in: 0..<3)
         switch idx {
         case 0:
-            return ErrorTuple.make(APIModule.Errors.networkError)
+            return .error(APIModule.Errors.networkError)
         case 1:
-            return ErrorTuple.make(DatabaseModule.Errors.databaseNotCreated)
+            return .error(DatabaseModule.Errors.databaseNotCreated)
         default:
-            return ErrorTuple.make(SearchModule.AdNotFoundError())
+            return .error(SearchModule.AdNotFoundError())
         }
     }
 
-    func exampleUseCase() -> Result<String, ErrorTuple2<APIModule.Errors, DatabaseModule.Errors>> {
-        return Result.failure(ErrorTuple.make(APIModule.Errors.internalServerError))
+    func exampleUseCase() -> Result<String, ComposedError2<APIModule.Errors, DatabaseModule.Errors>> {
+        return Result.failure(.error(APIModule.Errors.internalServerError))
     }
 }
